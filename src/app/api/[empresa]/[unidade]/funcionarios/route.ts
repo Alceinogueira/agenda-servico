@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: { empresa: string; unidade: string } }
 ) {
   const unidadeId = parseInt(params.unidade);
-
+  console.log(process.env)
   if (isNaN(unidadeId)) {
     return NextResponse.json({ error: "ID de unidade inválido" }, { status: 400 });
   }
