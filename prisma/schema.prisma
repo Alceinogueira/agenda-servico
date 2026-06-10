@@ -95,6 +95,18 @@ model Cliente {
   senhaHash    String        @map("senha_hash")
   createdAt    DateTime      @default(now()) @map("created_at")
   agendamentos Agendamento[]
+  resetCodes   ResetPasswordCode[]
 
   @@map("clientes")
+}
+
+model ResetPasswordCode {
+  id         Int      @id @default(autoincrement())
+  clienteId  Int      @map("cliente_id")
+  codigo     String
+  expiresAt  DateTime @map("expires_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  cliente    Cliente  @relation(fields: [clienteId], references: [id])
+
+  @@map("reset_password_codes")
 }
