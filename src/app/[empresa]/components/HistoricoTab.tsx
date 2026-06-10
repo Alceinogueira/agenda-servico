@@ -379,6 +379,12 @@ export default function HistoricoTab({ empresaSlug: _empresaSlug }: HistoricoTab
             >
               {loading ? "Entrando..." : "Entrar"}
             </button>
+            <a
+              href="/auth/trocar-senha"
+              className="block text-center text-sm text-[#4b4a4a] hover:text-[#19d18e] mt-3"
+            >
+              Esqueceu a senha? Trocar senha
+            </a>
           </div>
         </div>
       </div>
