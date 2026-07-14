@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import jwt from "jsonwebtoken";
+import { verifyAuthToken } from "@/lib/auth";
 
 /** Cancelamentos ficam visíveis no histórico só por esse intervalo após cancelar */
 const CANCELADO_VISIVEL_MS = 5 * 60 * 1000;
@@ -12,23 +12,16 @@ function visivelNoHistorico(status: string, canceladoAt: Date | null): boolean {
 }
 
 export async function GET(request: Request) {
-  const authHeader = request.headers.get("Authorization");
+  const decoded = verifyAuthToken(request.headers.get("Authorization"));
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (!decoded) {
     return NextResponse.json(
-      { error: "Token não fornecido" },
+      { error: "Token não fornecido ou inválido" },
       { status: 401 }
     );
   }
 
-  const token = authHeader.split(" ")[1];
-
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
-      clienteId: number;
-      role?: string;
-    };
-
     if (decoded.role === "barbeiro") {
       const agendamentos = await prisma.agendamento.findMany({
         include: {
@@ -103,8 +96,8 @@ export async function GET(request: Request) {
     return NextResponse.json(historico);
   } catch {
     return NextResponse.json(
-      { error: "Token inválido" },
-      { status: 401 }
+      { error: "Erro ao carregar histórico" },
+      { status: 500 }
     );
   }
 }

@@ -80,7 +80,17 @@ async function main() {
     },
   });
 
+  const adminHash = await bcrypt.hash("Teste12345", 10);
+  await prisma.cliente.create({
+    data: {
+      nome: "Administrador",
+      telefone: "73981337571",
+      senhaHash: adminHash,
+    },
+  });
+
   console.log("Seed concluído!");
+  console.log("Admin: 73981337571 / Teste12345");
 }
 
 main()

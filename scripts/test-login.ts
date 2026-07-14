@@ -1,24 +1,34 @@
+import "dotenv/config";
 import { prisma } from "../src/lib/prisma";
+import { roleFromTelefone } from "../src/lib/auth";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 async function main() {
   const telefone = "73981337571";
-  const senha = "agendamento10";
+  const senha = "Teste12345";
 
   const cliente = await prisma.cliente.findUnique({ where: { telefone } });
   if (!cliente) {
     console.log("❌ Cliente não encontrado");
-    return;
+    await prisma.$disconnect();
+    process.exit(1);
   }
 
   const senhaValida = await bcrypt.compare(senha, cliente.senhaHash);
   if (!senhaValida) {
     console.log("❌ Senha inválida");
-    return;
+    await prisma.$disconnect();
+    process.exit(1);
   }
 
-  const role = cliente.telefone === "73981337571" ? "barbeiro" : "cliente";
+  const role = roleFromTelefone(cliente.telefone);
+  if (role !== "barbeiro") {
+    console.log("❌ Role esperada: barbeiro");
+    await prisma.$disconnect();
+    process.exit(1);
+  }
+
   const token = jwt.sign(
     { clienteId: cliente.id, role },
     process.env.JWT_SECRET || "test-secret",
@@ -26,11 +36,15 @@ async function main() {
   );
 
   console.log("✅ Login bem-sucedido!");
-  console.log({ cliente: { id: cliente.id, nome: cliente.nome, telefone, role }, token });
+  console.log({
+    cliente: { id: cliente.id, nome: cliente.nome, telefone, role },
+    tokenPreview: `${token.slice(0, 24)}...`,
+  });
   await prisma.$disconnect();
 }
 
-main().catch((e) => {
+main().catch(async (e) => {
   console.error("❌ Erro:", e);
+  await prisma.$disconnect();
   process.exit(1);
 });

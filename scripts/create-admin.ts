@@ -1,14 +1,22 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "../src/lib/prisma";
+import { BARBEIRO_TELEFONE } from "../src/lib/auth";
 
 async function main() {
-  const telefone = "73981337571";
-  const senha = "agendamento10";
+  const telefone = BARBEIRO_TELEFONE;
+  const senha = "Teste12345";
   const senhaHash = await bcrypt.hash(senha, 10);
 
   const existing = await prisma.cliente.findUnique({ where: { telefone } });
   if (existing) {
-    console.log("Já existe cliente:", JSON.stringify(existing, null, 2));
+    const cliente = await prisma.cliente.update({
+      where: { telefone },
+      data: {
+        nome: "Administrador",
+        senhaHash,
+      },
+    });
+    console.log("Admin atualizado:", JSON.stringify(cliente, null, 2));
   } else {
     const cliente = await prisma.cliente.create({
       data: {
@@ -17,7 +25,7 @@ async function main() {
         senhaHash,
       },
     });
-    console.log("Cliente criado:", JSON.stringify(cliente, null, 2));
+    console.log("Admin criado:", JSON.stringify(cliente, null, 2));
   }
 
   await prisma.$disconnect();

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { roleFromTelefone } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
@@ -14,8 +15,10 @@ export async function POST(request: Request) {
     );
   }
 
+  const telefoneLimpo = String(telefone).replace(/\D/g, "");
+
   const cliente = await prisma.cliente.findUnique({
-    where: { telefone },
+    where: { telefone: telefoneLimpo },
   });
 
   if (!cliente) {
@@ -34,7 +37,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const role = cliente.telefone === "73981337571" ? "barbeiro" : "cliente";
+  const role = roleFromTelefone(cliente.telefone);
 
   const token = jwt.sign(
     { clienteId: cliente.id, role },
